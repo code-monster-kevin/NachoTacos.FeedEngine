@@ -16,3 +16,5 @@ Reference: [https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-start
 ## Hangfire
 [https://www.hangfire.io/]
 [https://docs.hangfire.io]
+
+## System.ServiceModel.Syndication

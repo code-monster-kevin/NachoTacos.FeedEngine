@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NachoTacos.FeedEngine.Data
 {
-    public class FeedEngineContext : DbContext
+    public class FeedEngineContext : DbContext, IFeedEngineContext
     {
         public FeedEngineContext(DbContextOptions<FeedEngineContext> options) : base(options)
         {
@@ -15,6 +15,11 @@ namespace NachoTacos.FeedEngine.Data
 
         public DbSet<FeedSource> FeedSources { get; set; }
         public DbSet<FeedType> FeedTypes { get; set; }
+        public DbSet<FeedItem> FeedItems { get; set; }
+        public DbSet<FeedItemAuthor> FeedItemAuthors { get; set; }
+        public DbSet<FeedItemContributor> FeedItemContributors { get; set; }
+        public DbSet<FeedItemCategory> FeedItemCategories { get; set; }
+        public DbSet<FeedItemLink> FeedItemLinks { get; set; }
 
         #region "Seed Data"
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,10 +28,13 @@ namespace NachoTacos.FeedEngine.Data
                 .HasData(
                     new FeedType { Code = "RSS091", Description = "RSS 0.91" },
                     new FeedType { Code = "RSS092", Description = "RSS 0.92" },
-                    new FeedType { Code = "RSS100", Description = "RSS 1.0" },
-                    new FeedType { Code = "RSS200", Description="RSS 2.0" },
+                    new FeedType { Code = "RSS1", Description = "RSS 1.0" },
+                    new FeedType { Code = "RSS2", Description = "RSS 2.0" },
                     new FeedType { Code = "ATOM", Description = "ATOM" }
                 );
+
+            modelBuilder.Entity<FeedItem>()
+                .HasKey(x => new { x.FeedItemId, x.FeedSourceId });
 
         }
         #endregion

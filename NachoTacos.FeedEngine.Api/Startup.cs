@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
 using System.Reflection;
+using NachoTacos.FeedEngine.Data;
+using Hangfire;
 
 namespace NachoTacos.FeedEngine.Api
 {
@@ -24,7 +26,8 @@ namespace NachoTacos.FeedEngine.Api
         {
             NachoTacos.FeedEngine.Data.Startup
                 .ConfigureServices(services, Configuration.GetConnectionString("FeedEngineConnection"));
-            
+            services.AddTransient<IFeedEngineContext, FeedEngineContext>();
+
             services.AddLogging();
 
             services.AddSwaggerGen(c =>
@@ -34,6 +37,9 @@ namespace NachoTacos.FeedEngine.Api
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+
+            services.AddHangfire(x => x.UseSqlServerStorage(Configuration.GetConnectionString("FeedEngineConnection")));
+            services.AddHangfireServer();
 
             services.AddControllers();
         }
@@ -63,6 +69,7 @@ namespace NachoTacos.FeedEngine.Api
             {
                 endpoints.MapControllers();
             });
+            app.UseHangfireDashboard();
         }
     }
 }

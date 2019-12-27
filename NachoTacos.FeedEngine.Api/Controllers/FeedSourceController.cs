@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using NachoTacos.FeedEngine.Data;
 using NachoTacos.FeedEngine.Domain;
 using System;
@@ -14,18 +15,19 @@ namespace NachoTacos.FeedEngine.Api.Controllers
     public class FeedSourceController : ControllerBase
     {
         #region "Constructors"
-        private FeedEngineContext _feedEngineContext;
+        private IFeedEngineContext _feedEngineContext;
+        private readonly ILogger<FeedSourceController> _logger;
 
-        public FeedSourceController(FeedEngineContext feedEngineContext)
+        public FeedSourceController(IFeedEngineContext feedEngineContext, ILogger<FeedSourceController> logger)
         {
             _feedEngineContext = feedEngineContext;
+            _logger = logger;
         }
 
         #endregion
 
         #region "Controllers"
         [HttpGet]
-        [Route("feedsource")]
         public IActionResult GetFeedSources()
         {
             try
@@ -40,13 +42,13 @@ namespace NachoTacos.FeedEngine.Api.Controllers
             }
             catch(Exception ex)
             {
+                _logger.LogError(ex.Message);
                 return Problem(ex.Message);
             }
             
         }
 
         [HttpPost]
-        [Route("feedsource")]
         public async Task<IActionResult> AddFeedSources(string feedUrl, string feedTypeCode)
         {
             try
@@ -57,33 +59,34 @@ namespace NachoTacos.FeedEngine.Api.Controllers
                     return NotFound(feedTypeCode);
                 }
 
-                FeedSource feedSource = CreateFeedSource(feedUrl, feedType);
-                _feedEngineContext.FeedSources.Add(feedSource);
-                await _feedEngineContext.SaveChangesAsync();
+                FeedSource feedSource = GetFeedSource(feedUrl);
+                if (feedSource == null)
+                {
+                    feedSource = CreateFeedSource(feedUrl, feedType);
+                    _feedEngineContext.FeedSources.Add(feedSource);
+                    await _feedEngineContext.SaveChangesAsync();
+                }
 
                 return Ok(feedSource);
             }
             catch(SqlException sqlex)
             {
-                switch(sqlex.ErrorCode)
+                return sqlex.ErrorCode switch
                 {
-                    case 2627:
-                        return Problem("Duplicate key");
-                    case 208:
-                        return Problem("Bad Object");
-                    default:
-                        return Problem(sqlex.Message);
-                }
+                    2627 => Problem("Duplicate key"),
+                    208 => Problem("Bad Object"),
+                    _ => Problem(sqlex.Message),
+                };
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message);
                 return Problem(ex.Message);
             }
         }
 
         [HttpDelete]
-        [Route("feedsource")]
-        public async Task<IActionResult> DeleteFeedSources(string feedUrl, string feedTypeCode)
+        public async Task<IActionResult> DeleteFeedSources(string feedUrl)
         {
             try
             {
@@ -100,6 +103,7 @@ namespace NachoTacos.FeedEngine.Api.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message);
                 return Problem(ex.Message);
             }
         }
@@ -115,6 +119,7 @@ namespace NachoTacos.FeedEngine.Api.Controllers
         {
             return new FeedSource
             {
+                FeedSourceId = Guid.NewGuid(),
                 FeedUrl = feedUrl,
                 FeedType = feedType
             };
