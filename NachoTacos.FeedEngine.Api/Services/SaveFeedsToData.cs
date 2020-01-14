@@ -7,6 +7,7 @@ using NachoTacos.FeedEngine.Data;
 using NachoTacos.FeedEngine.Domain;
 using System.Xml;
 using Microsoft.Extensions.Logging;
+using System.Xml.Linq;
 
 namespace NachoTacos.FeedEngine.Api.Services
 {
@@ -55,15 +56,17 @@ namespace NachoTacos.FeedEngine.Api.Services
         #region "Helper Functions"
         private FeedItem GetFeedItem(Guid feedSourceId, SyndicationItem item)
         {
+            string content = GetRssContent(item);
+
             return new FeedItem
             {
                 FeedSourceId = feedSourceId,
                 FeedItemId = item.Id,
                 Title = item.Title.Text,
                 Summary = item.Summary?.Text ?? String.Empty,
-                BaseUri = item.BaseUri?.ToString(),
-                Content = item.Content?.ToString(),
-                Copyright = item.Copyright?.ToString(),
+                BaseUri = item.BaseUri?.AbsoluteUri,
+                Content = content,
+                Copyright = item.Copyright?.Text,
                 PublishDate = item.PublishDate.UtcDateTime,
                 LastUpdatedTime = item.LastUpdatedTime.UtcDateTime,
                 Contributors = GetContributors(item.Contributors?.ToList()),
@@ -133,6 +136,24 @@ namespace NachoTacos.FeedEngine.Api.Services
             }
 
             return feedItemAuthors;
+        }
+
+        private string GetRssContent(SyndicationItem item)
+        {
+            string content = string.Empty;
+
+            foreach (SyndicationElementExtension ext in item.ElementExtensions)
+            {
+                if (ext.GetObject<XElement>().Name.LocalName == "encoded")
+                    content += ext.GetObject<XElement>().Value;
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                content = item.Content?.ToString();
+            }
+
+            return content;
         }
         #endregion
     }

@@ -33,7 +33,7 @@ From appsettings.json, add the following configuration settings
         "Name": "File",
         "Args": {
           "path": "logs\\log-.txt",
-          "rollingInterval": "RollingInterval.Day"
+          "rollingInterval": "Day"
         }
       }
     ],

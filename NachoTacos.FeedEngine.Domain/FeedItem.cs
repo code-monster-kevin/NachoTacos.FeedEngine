@@ -9,7 +9,7 @@ namespace NachoTacos.FeedEngine.Domain
         [Required]
         public Guid FeedSourceId { get; set; }
         [Required]
-        public string FeedItemId { get; set; }        
+        public string FeedItemId { get; set; }
         public string Title { get; set; }
         public string Summary { get; set; }
         public string BaseUri { get; set; }

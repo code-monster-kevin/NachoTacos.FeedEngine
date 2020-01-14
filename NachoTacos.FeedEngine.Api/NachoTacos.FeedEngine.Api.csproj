@@ -28,5 +28,9 @@
     <ProjectReference Include="..\NachoTacos.FeedEngine.Domain\NachoTacos.FeedEngine.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="logs\" />
+  </ItemGroup>
+
 
 </Project>
